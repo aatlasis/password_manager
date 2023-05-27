@@ -2,6 +2,8 @@ import os, csv, datetime, getpass
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.backends import default_backend
 
+special_characters = ['#','!','~','(',')','_']
+
 def generate_salt():
     website = input('Enter the name of the website (e.g. facebook): ')
     salt = os.urandom(16)
@@ -10,13 +12,24 @@ def generate_salt():
 
 def derive_hash(salt,length):
     kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1, backend=default_backend())
+    spec_char = input('Do you want a special character? (Y/y): ')
     password = getpass.getpass('Enter your magic password:')
     bytes_password = bytes(password,'utf-8')
     key = kdf.derive(bytes_password)
     myhash = key.hex().title()
+    if spec_char == 'Y' or spec_char == 'y':
+        int_val = bytes(myhash, encoding='raw_unicode_escape') 
+        int_val = int.from_bytes(int_val, "big")
+        special_char = int_val%len(special_characters)
     if length > 0:
         myhash = myhash[0:length]
-    print("KDF output:", myhash)
+        if spec_char == 'Y' or spec_char == 'y':
+            myhash = myhash[:-1] + special_characters[special_char]
+        print("KDF output:", myhash)
+    elif spec_char == 'Y' or spec_char == 'y':
+        print("KDF output:", myhash+special_characters[special_char])
+    else:
+        print("KDF output:", myhash)
 
 def main():
     fieldnames = ['website', 'salt','timestamp']
