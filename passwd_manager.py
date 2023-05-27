@@ -10,25 +10,24 @@ def generate_salt():
     current_time = datetime.datetime.now()
     return website,salt,current_time
 
-def derive_hash(salt,length):
+def derive_hash(salt,length,special_character_needed):
     kdf = Scrypt(salt=salt, length=32, n=2**14, r=8, p=1, backend=default_backend())
-    spec_char = input('Do you want a special character? (Y/y): ')
     password = getpass.getpass('Enter your magic password:')
     bytes_password = bytes(password,'utf-8')
     key = kdf.derive(bytes_password)
-    myhash = key.hex().title()
-    if spec_char == 'Y' or spec_char == 'y':
-        int_val = bytes(myhash, encoding='raw_unicode_escape') 
+    original_hash = key.hex().title()
+    if length > 0:
+        myhash = original_hash[0:length]
+    else:
+        myhash = original_hash
+    if special_character_needed:
+        int_val = bytes(original_hash, encoding='raw_unicode_escape') 
         int_val = int.from_bytes(int_val, "big")
         special_char = int_val%len(special_characters)
-    if length > 0:
-        myhash = myhash[0:length]
-    if spec_char == 'Y' or spec_char == 'y':
         spec_char_position = int_val%len(myhash)
         part1 = myhash[0:spec_char_position]
         part2 = myhash[spec_char_position+1:]
         myhash = part1+special_characters[special_char]+part2
-        print(spec_char_position)
     print("KDF output:", myhash)
 
 def main():
@@ -58,26 +57,31 @@ def main():
             for lines in csv_reader:
                 if i == website_id:
                     salt = lines['salt']
-                    length = lines['website'].split(':')
+                    website = lines['website'].split(':')
                     break
                 else:
                     i = i+1
             if 'salt' in locals():
-                derive_hash(bytes.fromhex(salt),int(length[1]))
+                derive_hash(bytes.fromhex(salt),int(website[1]),int(website[2]))
             else:
                 print(f'salt for website with id {website_id} not found')
     elif choice ==1: 
         website,salt,timestamp = generate_salt()
-        length = input('Enter the maximum allowed password length (enter 0 if there is no max length or if you do not know):')
+        length = input('Enter the maximum allowed password length (enter 0 if there is no max length or if you do not know): ')
         try:
             length = int(length)
         except:
             print('you must enter an integer number here')
             exit(0)
+        spec_char = input('Do you want a special character? (Y/y): ')
+        if spec_char == 'Y' or spec_char == 'y':
+            special_character_needed = 1
+        else:
+            special_character_needed = 0 
         with open('salts.csv', 'a+', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            writer.writerow({'website': ':'.join((website,str(length))), 'salt': salt.hex(), 'timestamp': str(timestamp)})
-        derive_hash(salt,length)
+            writer.writerow({'website': ':'.join((website,str(length),str(special_character_needed))), 'salt': salt.hex(), 'timestamp': str(timestamp)})
+        derive_hash(salt,length,special_character_needed)
     else:
         with open('salts.csv', mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file,fieldnames=fieldnames)
