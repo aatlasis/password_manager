@@ -23,13 +23,13 @@ def derive_hash(salt,length):
         special_char = int_val%len(special_characters)
     if length > 0:
         myhash = myhash[0:length]
-        if spec_char == 'Y' or spec_char == 'y':
-            myhash = myhash[:-1] + special_characters[special_char]
-        print("KDF output:", myhash)
-    elif spec_char == 'Y' or spec_char == 'y':
-        print("KDF output:", myhash+special_characters[special_char])
-    else:
-        print("KDF output:", myhash)
+    if spec_char == 'Y' or spec_char == 'y':
+        spec_char_position = int_val%len(myhash)
+        part1 = myhash[0:spec_char_position]
+        part2 = myhash[spec_char_position+1:]
+        myhash = part1+special_characters[special_char]+part2
+        print(spec_char_position)
+    print("KDF output:", myhash)
 
 def main():
     fieldnames = ['website', 'salt','timestamp']
@@ -46,7 +46,6 @@ def main():
         print('you must enter an integer number here')
         exit(0)
     if not choice:
-        #website = input('Enter the name of the website (e.g. facebook): ')
         website_id = input('Enter the id number of the website you want to read the key: ')
         try:
             website_id = int(website_id)
@@ -58,8 +57,6 @@ def main():
             i = 1
             for lines in csv_reader:
                 if i == website_id:
-                #if website == lines['website'].split(':')[0]:
-                    #website == lines['website'].split(':')[0]:
                     salt = lines['salt']
                     length = lines['website'].split(':')
                     break
@@ -68,7 +65,6 @@ def main():
             if 'salt' in locals():
                 derive_hash(bytes.fromhex(salt),int(length[1]))
             else:
-                #print(f'salt for website {website} not found')
                 print(f'salt for website with id {website_id} not found')
     elif choice ==1: 
         website,salt,timestamp = generate_salt()
