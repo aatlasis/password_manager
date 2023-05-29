@@ -50,6 +50,7 @@ def main():
         print('you must enter an integer number here')
         exit(0)
     if not choice:
+        print_websites()
         website_id = input('Enter the id number of the website you want to read the key: ')
         try:
             website_id = int(website_id)
@@ -88,7 +89,8 @@ def main():
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writerow({'website': ':'.join((website,str(length),str(special_character_needed))), 'salt': salt.hex(), 'timestamp': str(timestamp)})
         derive_hash(salt,length,special_character_needed)
-    elif choice ==2 or choice ==3: 
+    elif choice ==2 or choice ==3:
+        print_websites()
         if choice ==2:
             website_id = input('Enter the id number of the website you want to update the key: ')
         else:
