@@ -43,7 +43,7 @@ def print_websites():
 
 def main():
     #print_websites()
-    choice=input('\nEnter:\n-------\n"0" to read a salt, \n"1" to generate a new salt, \n"2" to update an exisitng password, \n"3" to delete an existing entry, \nany other integer to print available websites: ')
+    choice=input('\nEnter:\n-------\n"0" to read a salt, \n"1" to generate a new salt, \n"2" to update an existing password, \n"3" to delete an existing entry, \nany other integer to print available websites: ')
     try:
         choice=int(choice)
     except:
